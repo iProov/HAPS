@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:haps:schema:action-intent:v0.4",
+  "title": "HAPS Action Intent v0.4",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "intentId",
+    "issuedAt",
+    "audience",
+    "agent",
+    "action",
+    "constraints",
+    "display"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "0.4"
+    },
+    "intentId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "issuedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "profile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "audience": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 3
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "logoUrl": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 3
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "software": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "version"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "parameters"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parameters": {
+          "type": "object"
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expiresAt",
+        "oneTime"
+      ],
+      "properties": {
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "oneTime": {
+          "type": "boolean"
+        },
+        "maxUses": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "envelope": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Optional bounded constraints allowing limited adjustments without re-consent. Profile-specific semantics."
+        }
+      }
+    },
+    "display": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "language",
+        "title",
+        "summary"
+      ],
+      "properties": {
+        "language": {
+          "type": "string",
+          "minLength": 2
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 600
+        },
+        "riskNotice": {
+          "type": "string",
+          "maxLength": 600
+        }
+      }
+    }
+  }
+}

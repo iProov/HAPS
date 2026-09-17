@@ -1,0 +1,51 @@
+{
+  "profile": "haps.profile.payment.transfer/v0.4",
+  "audience": {
+    "id": "did:web:bank.example",
+    "name": "Example Bank"
+  },
+  "agent": {
+    "id": "did:web:agent.example",
+    "name": "Treasury Agent",
+    "software": {
+      "name": "ExampleAgent",
+      "version": "1.0.0"
+    }
+  },
+  "action": {
+    "type": "payment.transfer",
+    "parameters": {
+      "amount": {
+        "currency": "GBP",
+        "value": "250.00"
+      },
+      "to": {
+        "iban": "GB00EXAMP1E00000000000000",
+        "name": "Example Supplier Ltd"
+      },
+      "reference": "Invoice 18372"
+    }
+  },
+  "constraints": {
+    "expiresAt": "2026-01-09T00:02:00Z",
+    "oneTime": true,
+    "envelope": {
+      "amountRange": {
+        "currency": "GBP",
+        "min": "200.00",
+        "max": "300.00"
+      },
+      "allowedPayees": [
+        {
+          "iban": "GB00EXAMP1E00000000000000"
+        }
+      ]
+    }
+  },
+  "display": {
+    "title": "Approve payment transfer",
+    "summary": "Approve a £250.00 transfer to Example Supplier Ltd (Invoice 18372).",
+    "riskNotice": "This action moves money and may be irreversible.",
+    "language": "en"
+  }
+}

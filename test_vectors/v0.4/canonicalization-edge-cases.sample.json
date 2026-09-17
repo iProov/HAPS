@@ -1,0 +1,25 @@
+{
+  "Ｚ": "fullwidth Z key sorts after the emoji key in UTF-16 code-unit order",
+  "🔐": "surrogate-pair key sorts first",
+  "b": "ascii",
+  "a": {
+    "currency": "£",
+    "value": "250.75",
+    "count": 1,
+    "large": 1000000
+  },
+  "unicode_values": [
+    "£250.75",
+    "naïve",
+    "日本語",
+    "🔐"
+  ],
+  "escapes": "quote:\" backslash:\\ tab:\t newline:\n",
+  "empty": {},
+  "emptyList": [],
+  "bools": [
+    true,
+    false
+  ],
+  "nullValue": null
+}

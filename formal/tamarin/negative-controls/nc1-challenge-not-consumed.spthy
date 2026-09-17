@@ -1,0 +1,169 @@
+/*
+  HAPS v0.4.0 Challenge Mode: experimental symbolic model.
+
+  This draft specification and partial reference implementation are not
+  production-ready. Model results do not establish full protocol conformance
+  or that a person saw and approved the correct action.
+
+  Models selected message-flow constraints from
+  specification/draft/haps-v0.4.0.md sections 10 and 12 (paths from repo root).
+  The Dolev-Yao attacker controls network inputs and outputs. Signing, hashing,
+  and view/1 are symbolic abstractions, not implementations.
+
+  HumanApproved is a rule event triggered by an attacker-supplied SHOW input.
+  It requires no faithful rendering, physical presence, comprehension, or real
+  approval gesture. Accept is also an event, not action execution.
+  See formal/tamarin/README.md for exact formulas, assumptions, and results.
+*/
+
+theory HAPS_NC1_ChallengeNotConsumed
+begin
+
+builtins: signing, hashing
+
+functions: view/1   // public free constructor; no projection or rendering code
+
+/* ------------------------------------------------------------------ setup */
+
+// A Presence Provider registers a signing key.
+rule PP_Register:
+    [ Fr(~ltk) ]
+  --[ PPRegistered($PP) ]->
+    [ !Ltk($PP, ~ltk), !Pk($PP, pk(~ltk)), Out(pk(~ltk)) ]
+
+// A relying party learns which provider key it trusts.
+rule RP_Trusts_PP:
+    [ !Pk($PP, pkPP) ]
+  --[ Trusts($RP, $PP) ]->
+    [ !RPTrusts($RP, $PP, pkPP) ]
+
+// Expose a provider key to the network attacker. Some lemmas exclude this
+// event anywhere in the entire trace; read each formula's condition.
+rule PP_Compromise:
+    [ !Ltk($PP, ltk) ]
+  --[ Compromised($PP) ]->
+    [ Out(ltk) ]
+
+/* -------------------------------------------------- the protocol itself */
+
+// Negative control: persistent RP_Outstanding permits repeated acceptance.
+// There is still no expiry, database transaction, or action execution.
+rule RP_Issue_Challenge:
+    [ Fr(~cid), In(intent) ]
+  --[ ChallengeIssued($RP, ~cid, intent) ]->
+    [ Out(<'HAPS_CHAL', $RP, ~cid, intent>)
+    , !RP_Outstanding($RP, ~cid, intent) ]   // BROKEN: persistent, never consumed
+
+// Emit a symbolic SHOW message and Showed event. This rule has no display,
+// rendering, trusted channel, or human observer.
+rule PP_Show:
+    [ In(<'HAPS_CHAL', rp, cid, intent>) ]
+  --[ Showed($PP, cid, view(intent)) ]->
+    [ Out(<'SHOW', $PP, cid, view(intent)>)
+    , PP_Pending($PP, rp, cid, intent) ]
+
+// A network SHOW input triggers HumanApproved and creates a linear Approval.
+// The attacker can supply this input; the rule requires no preceding Showed
+// event, actual display, presence, understanding, or user gesture.
+rule Human_Approve:
+    [ In(<'SHOW', pp, cid, v>) ]
+  --[ HumanApproved($H, pp, cid, v) ]->
+    [ Approval($H, pp, cid, v) ]
+
+// Consume a symbolic Approval and sign selected intent/view terms, audience,
+// and challenge. This is not a full credential issuer.
+rule PP_Issue_CC:
+    let cc  = <'HAPS_CC', $PP, $H, rp, cid, h(intent), h(view(intent))>
+        sig = sign(cc, ltk)
+    in
+    [ PP_Pending($PP, rp, cid, intent)
+    , Approval($H, $PP, cid, view(intent))
+    , !Ltk($PP, ltk) ]
+  --[ Issued($PP, $H, rp, cid, intent) ]->
+    [ Out(<cc, sig>) ]
+
+// Negative control: retain the persistent challenge after checking symbolic
+// signature and credential fields, allowing repeated Accept events.
+rule RP_Verify_Accept:
+    let cc = <'HAPS_CC', pp, h, $RP, cid, h(intent), h(view(intent))>
+    in
+    [ !RP_Outstanding($RP, cid, intent)
+    , !RPTrusts($RP, pp, pkPP)
+    , In(<cc, sig>) ]
+  --[ Accept($RP, pp, h, cid, intent)
+    , Verified(verify(sig, cc, pkPP)) ]->
+    [ ]
+
+restriction signature_must_verify:
+  "All x #i. Verified(x) @ i ==> x = true"
+
+/* ----------------------------------------------------------- properties */
+
+/*
+  Seek an Accept trace without provider compromise. This checks event
+  reachability, not adequacy of the abstraction.
+*/
+lemma executable:
+  exists-trace
+  "Ex rp pp h cid intent #i.
+     Accept(rp, pp, h, cid, intent) @ i
+     & not (Ex p #r. Compromised(p) @ r)"
+
+/*
+  Query: absent provider compromise throughout the trace, Accept has an
+  earlier HumanApproved event for the same holder, provider, challenge, and
+  view(intent). This is event correspondence, not evidence of real display or
+  human approval.
+*/
+lemma action_binding:
+  all-traces
+  "All rp pp h cid intent #i.
+     Accept(rp, pp, h, cid, intent) @ i
+     & not (Ex #r. Compromised(pp) @ r)
+     ==> (Ex #j. HumanApproved(h, pp, cid, view(intent)) @ j & #j < #i)"
+
+/*
+  Query: two identical Accept tuples have the same event position if a
+  matching HumanApproved event exists and the provider is uncompromised. This
+  formula does not itself require approval existence for every Accept;
+  action_binding is separate.
+*/
+lemma injective_agreement:
+  all-traces
+  "All rp pp h cid intent #i #j #k.
+     Accept(rp, pp, h, cid, intent) @ i
+     & Accept(rp, pp, h, cid, intent) @ j
+     & HumanApproved(h, pp, cid, view(intent)) @ k
+     & not (Ex #r. Compromised(pp) @ r)
+     ==> #i = #j"
+
+/*
+  Query: given HumanApproved, Accept events sharing provider, holder, and
+  challenge have the same position under the stated compromise condition. Real
+  replay storage and action execution are not modelled.
+*/
+lemma no_approval_reuse:
+  all-traces
+  "All pp h cid v rp1 rp2 i1 i2 #a #x #y.
+     HumanApproved(h, pp, cid, v) @ a
+     & Accept(rp1, pp, h, cid, i1) @ x
+     & Accept(rp2, pp, h, cid, i2) @ y
+     & not (Ex #r. Compromised(pp) @ r)
+     ==> #x = #y"
+
+/*
+  This control retains a witness query; it does not require a Compromised event.
+*/
+/*
+  Seek an Accept event without a matching HumanApproved event. Read the
+  formula for whether compromise is required or merely allowed; the negative
+  controls do not explicitly require it. A witness exposes a model trust
+  limitation, not deployment safety.
+*/
+lemma compromised_provider_forges:
+  exists-trace
+  "Ex rp pp h cid intent #i.
+     Accept(rp, pp, h, cid, intent) @ i
+     & not (Ex hh #j. HumanApproved(hh, pp, cid, view(intent)) @ j)"
+
+end

@@ -1,0 +1,20 @@
+{
+  "providerId": "provider-b",
+  "providerName": "Example Presence Provider B",
+  "certifiedLevels": [
+    "HAPS-PoHP-1",
+    "HAPS-PoHP-2"
+  ],
+  "certifiedFactors": [
+    "webauthn.uv",
+    "passkey.biometric",
+    "otp.delivered"
+  ],
+  "issuer": "did:web:certifier.example",
+  "issuedAt": "2026-01-02T00:00:00Z",
+  "expiresAt": "2027-01-02T00:00:00Z",
+  "evaluation": {
+    "lab": "Example Evaluation Lab",
+    "reportId": "EEL-2026-0042"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "version": "0.4",
+  "profile": "haps.profile.payment.transfer/v0.4",
+  "intentId": "550e8400-e29b-41d4-a716-446655440000",
+  "issuedAt": "2026-01-09T00:00:00Z",
+  "audience": {
+    "id": "did:web:bank.example",
+    "name": "Example Bank"
+  },
+  "agent": {
+    "id": "did:web:agent.example",
+    "name": "Treasury Agent"
+  },
+  "action": {
+    "type": "payment.transfer",
+    "parameters": {
+      "amount": {
+        "currency": "GBP",
+        "value": 250.75
+      },
+      "to": {
+        "iban": "GB00EXAMP1E00000000000000"
+      }
+    }
+  },
+  "display": {
+    "language": "en",
+    "title": "Approve payment transfer",
+    "summary": "Approve a transfer to Example Supplier Ltd."
+  }
+}

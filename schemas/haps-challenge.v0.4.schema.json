@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:haps:schema:challenge:v0.4",
+  "title": "HAPS Challenge v0.4",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "challengeId",
+    "expiresAt",
+    "requirements",
+    "actionIntent"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "0.4"
+    },
+    "challengeId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pohp"
+      ],
+      "properties": {
+        "pohp": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "minLevel"
+          ],
+          "properties": {
+            "minLevel": {
+              "type": "string",
+              "enum": [
+                "HAPS-PoHP-1",
+                "HAPS-PoHP-2",
+                "HAPS-PoHP-3",
+                "HAPS-PoHP-4"
+              ]
+            },
+            "maxCredentialAgeSeconds": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "identity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode"
+          ],
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "none",
+                "preferred",
+                "required"
+              ]
+            },
+            "schemes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 0
+            },
+            "policy": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "actionIntent": {
+      "$ref": "urn:haps:schema:action-intent:v0.4"
+    },
+    "rpProof": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Optional RP signature over the challenge contents."
+    }
+  }
+}
